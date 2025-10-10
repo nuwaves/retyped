@@ -23,10 +23,9 @@ export default function TopicsList({ topics }: TopicsListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check if content exceeds 2 lines
     const checkHeight = () => {
       if (containerRef.current) {
-        const lineHeight = 32; // Height of pill + gap
+        const lineHeight = 32;
         const twoLinesHeight = lineHeight * 2;
         const actualHeight = containerRef.current.scrollHeight;
 
@@ -34,7 +33,6 @@ export default function TopicsList({ topics }: TopicsListProps) {
       }
     };
 
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(checkHeight, 100);
     window.addEventListener('resize', checkHeight);
 
