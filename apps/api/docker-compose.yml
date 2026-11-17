@@ -1,0 +1,49 @@
+
+services:
+  webapp: &web
+    image: retyped/backend:latest
+    command: python manage.py runserver 0.0.0.0:8000
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./.:/app
+    ports:
+      - "8000:8000"
+    expose:
+      - 8000
+    depends_on:
+      - db
+    env_file:
+      - .env.dev
+    networks:
+      - retyped-local
+
+  db:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=localuser
+      - POSTGRES_PASSWORD=localpassword
+      - POSTGRES_DB=audio_processing
+    networks:
+      - retyped-local
+
+
+  #worker:
+  #  <<: *web
+  #  image: retyped/backend:latest
+  #  command: celery -A config worker -B -l info --loglevel=info
+  #  depends_on:
+  #    - db
+
+
+volumes:
+  dbdata:
+
+networks:
+  retyped-local:
+    external: true

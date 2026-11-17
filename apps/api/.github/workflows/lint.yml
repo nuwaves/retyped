@@ -1,0 +1,28 @@
+name: Lint
+
+on:
+  push:
+  pull_request:
+  # Called by the deploy workflow so deploys wait for lint.
+  workflow_call:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+
+      - name: Install ruff
+        run: pip install ruff==0.16.10
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Format check
+        run: ruff format --check .
