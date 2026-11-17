@@ -1,6 +1,6 @@
 # Retyped Processing
 
-Django backend for Retyped, a podcast discovery platform: REST API, admin, RSS feed ingest, transcription and LLM processing run as Celery tasks. The frontend is [`nuwaves/retyped_frontend`](https://github.com/nuwaves/retyped_frontend).
+Django backend for Retyped, a podcast discovery platform: REST API, admin, RSS feed ingest, transcription and LLM processing run as Celery tasks. The frontend is in `apps/web/` of this monorepo (see the root `CLAUDE.md`). Run every command below from `apps/api/`.
 
 ## Stack
 
@@ -32,13 +32,13 @@ Local setup: copy `.env.example` to `.env.dev` and fill it in (`docker-compose.y
 ## Code style
 
 - Ruff rules `E, W, F, I, UP, DJ`, double quotes, target py311. `E501` and `DJ001` are ignored.
-- Run `ruff check .` and `ruff format --check .` before pushing; CI runs both (`lint.yml`) on every push.
+- Run `ruff check .` and `ruff format --check .` before pushing; CI runs both (`.github/workflows/api-lint.yml` at the repo root) on every push that touches `apps/api/`.
 - Settings live in `audio_processing/settings/` (`base.py`, `dev.py`, `prod.py`). A `settings.py` file also exists next to the package (verify which one is used before editing settings).
 - Management commands are in `audio_processing/management/commands/`; Celery tasks in `audio_processing/tasks/`.
 
 ## Branches and deployment
 
-- `main` is the default branch. **Every push to `main` deploys to production**: `.github/workflows/deploy.yml` runs lint and tests, builds and pushes a GHCR image, then deploys to the Hetzner server over Tailscale. The container entrypoint runs `python manage.py migrate` on boot (`entrypoint.sh`), so migrations ship with the deploy.
+- `main` is the default branch. **Every push to `main` that touches `apps/api/` deploys the backend to production**: `.github/workflows/api-deploy.yml` (repo root) runs lint and tests, builds and pushes a GHCR image, then deploys to the Hetzner server over Tailscale. The container entrypoint runs `python manage.py migrate` on boot (`entrypoint.sh`), so migrations ship with the deploy.
 - Work on a branch and open a PR into `main`. Tests run on branch pushes and PRs to `main`.
 - Never push to `main` directly. Never commit `.env*` files or secrets.
 
@@ -50,7 +50,7 @@ These areas are high-risk. Ask the maintainer before editing them:
 - Feed ingest: `tasks/podcast_tasks.py` (`process_podcast_rss_feed`, `process_all_active_podcasts`), `views/feed_viewsets.py`, `chart_import.py`
 - Auth: `views/auth_views.py`, `auth_urls.py`, OAuth/social-auth settings in `settings/base.py`, tests `test_auth_backends.py`, `test_convert_token.py`, `test_security.py`
 - Migrations (`audio_processing/migrations/`): never edit or delete an applied migration; add a new one and flag it in the PR
-- Deploy and infra: `.github/workflows/*`, `Dockerfile`, `entrypoint.sh`, `celery_*_endpoint.sh`, `deploy/`
+- Deploy and infra: `.github/workflows/api-*` (repo root), `Dockerfile`, `entrypoint.sh`, `celery_*_endpoint.sh`, `deploy/` (repo root)
 
 ## Gotchas
 

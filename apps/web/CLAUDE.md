@@ -1,12 +1,12 @@
 # Retyped Frontend
 
-Next.js frontend for [retyped.xyz](https://retyped.xyz), a podcast discovery platform. Talks to the Django API in [`nuwaves/retyped_processing`](https://github.com/nuwaves/retyped_processing) (set via `DJANGO_BACKEND`).
+Next.js frontend for [retyped.xyz](https://retyped.xyz), a podcast discovery platform. Talks to the Django API in `apps/api/` of this monorepo (set via `DJANGO_BACKEND`; see the root `CLAUDE.md`). Run every command below from `apps/web/`.
 
 ## Stack
 
 - Next.js 15 (App Router, `output: "standalone"`), React 19, TypeScript, Tailwind CSS 4 (versions in `package.json`)
 - Redux Toolkit + redux-persist (`app/_store/`), axios, NextAuth v4 (`next-auth`), framer-motion, Font Awesome, react-markdown, sanitize-html
-- Imports use the `@/*` alias, which maps to the repo root (`tsconfig.json`)
+- Imports use the `@/*` alias, which maps to `apps/web/` (`tsconfig.json`)
 
 ## Commands
 
@@ -54,8 +54,8 @@ Copy `.env.dev.example` as a template (names only: `NEXTAUTH_URL`, `NEXTAUTH_SEC
 
 ## Branches and deployment
 
-- `main` is the default branch. **Every push to `main` deploys to production**: `.github/workflows/deploy.yml` runs `checks.yml`, builds and pushes a GHCR image, then deploys to the Hetzner server over Tailscale.
-- Work on a branch and open a PR into `main`. PRs run lint, `tsc --noEmit` and a Docker build (`.github/workflows/checks.yml`).
+- `main` is the default branch. **Every push to `main` that touches `apps/web/` deploys the frontend to production**: `.github/workflows/web-deploy.yml` (repo root) runs `web-checks.yml`, builds and pushes a GHCR image, then deploys to the Hetzner server over Tailscale.
+- Work on a branch and open a PR into `main`. PRs run lint, `tsc --noEmit` and a Docker build (`.github/workflows/web-checks.yml`).
 - Never push to `main` directly. Never commit `.env*` files or secrets.
 
 ## Ask before changing
@@ -64,9 +64,9 @@ These areas are high-risk. Ask the maintainer before editing them:
 
 - Podcast ownership claim flow (verify-claim page, `podcastClaims*`, `usePodcastClaim`)
 - Auth: NextAuth config (`app/_lib/authOptions.ts`, `app/api/auth/`), `authClient`, auth slice, the `api/proxy` route
-- Feed/episode data ingest and revalidation (`app/api/revalidate-episode/`); ingest itself lives in `retyped_processing`
-- Deploy and CI: `.github/workflows/*`, `Dockerfile`, `Dockerfile.dev`, `next.config.ts` (rewrites, redirects, headers)
-- Database migrations: none in this repo; they belong to `retyped_processing`
+- Feed/episode data ingest and revalidation (`app/api/revalidate-episode/`); ingest itself lives in `apps/api/`
+- Deploy and CI: `.github/workflows/web-*` (repo root), `Dockerfile`, `Dockerfile.dev`, `next.config.ts` (rewrites, redirects, headers)
+- Database migrations: none in `apps/web/`; they belong to `apps/api/`
 
 ## Gotchas
 

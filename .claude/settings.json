@@ -1,6 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc --noEmit:*)",
       "Bash(ruff check:*)",
       "Bash(ruff format --check:*)",
       "Bash(python manage.py test:*)",
@@ -12,6 +15,9 @@
     ],
     "ask": [
       "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(npm ci:*)",
+      "Bash(npm uninstall:*)",
       "Bash(pip install:*)",
       "Bash(pip3 install:*)",
       "Bash(python manage.py migrate:*)"
@@ -19,7 +25,7 @@
     "deny": [
       "Read(./.env*)",
       "Read(**/.env*)",
-      "Read(./secrets/**)",
+      "Read(**/secrets/**)",
       "Read(**/*.pem)",
       "Read(**/*.key)",
       "Bash(rm -rf:*)",

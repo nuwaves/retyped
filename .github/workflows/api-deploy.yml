@@ -1,4 +1,4 @@
-name: Deploy
+name: API deploy
 
 # Every push to main: lint + tests, build an image tagged with the commit,
 # push it to GHCR, then deploy it to the Hetzner server over Tailscale.
@@ -6,11 +6,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - apps/api/**
+      - .github/workflows/api-*.yml
   workflow_dispatch:
 
-# One deploy at a time; a newer push waits rather than cancelling a deploy mid-way.
+# One deploy of this app at a time (the server script also takes a lock); a
+# newer push waits rather than cancelling a deploy mid-way.
 concurrency:
-  group: deploy-production
+  group: deploy-production-api
   cancel-in-progress: false
 
 permissions:
@@ -21,10 +25,10 @@ env:
 
 jobs:
   lint:
-    uses: ./.github/workflows/lint.yml
+    uses: ./.github/workflows/api-lint.yml
 
   tests:
-    uses: ./.github/workflows/tests.yml
+    uses: ./.github/workflows/api-tests.yml
 
   build:
     needs: [lint, tests]
@@ -45,12 +49,12 @@ jobs:
 
       - uses: docker/build-push-action@v7
         with:
-          context: .
+          context: apps/api
           push: true
           tags: ${{ env.IMAGE }}:${{ github.sha }}
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
 
   deploy:
     needs: build

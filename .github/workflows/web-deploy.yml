@@ -1,4 +1,4 @@
-name: Deploy
+name: Web deploy
 
 # Every push to main: lint and type-check, build an image tagged with the
 # commit, push it to GHCR, then deploy it to the Hetzner server over Tailscale.
@@ -6,11 +6,15 @@ on:
   push:
     branches:
       - main
+    paths:
+      - apps/web/**
+      - .github/workflows/web-*.yml
   workflow_dispatch:
 
-# One deploy at a time; a newer push waits rather than cancelling a deploy mid-way.
+# One deploy of this app at a time (the server script also takes a lock); a
+# newer push waits rather than cancelling a deploy mid-way.
 concurrency:
-  group: deploy-production
+  group: deploy-production-web
   cancel-in-progress: false
 
 permissions:
@@ -21,7 +25,7 @@ env:
 
 jobs:
   checks:
-    uses: ./.github/workflows/checks.yml
+    uses: ./.github/workflows/web-checks.yml
 
   build:
     needs: checks
@@ -44,15 +48,15 @@ jobs:
       # NEXTAUTH_SECRET is runtime-only (secrets/frontend.secrets on the server).
       - uses: docker/build-push-action@v7
         with:
-          context: .
+          context: apps/web
           push: true
           tags: ${{ env.IMAGE }}:${{ github.sha }}
           labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           build-args: |
             DJANGO_BACKEND=http://web:8000
             NEXTAUTH_URL=https://retyped.xyz
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
 
   deploy:
     needs: build

@@ -1,6 +1,6 @@
 # Deploys
 
-Pushing to `main` in this repo or in `retyped_frontend` deploys to the Hetzner server (`retyped`) through `.github/workflows/deploy.yml`:
+A push to `main` deploys whichever app it touches to the Hetzner server (`retyped`): `apps/api/` through `.github/workflows/api-deploy.yml`, `apps/web/` through `.github/workflows/web-deploy.yml`. A push touching both deploys both, in parallel; the server script serialises them with a lock.
 
 1. Lint and tests run. The frontend has no test step; its image build runs `next build`, which type-checks.
 2. The image is built and pushed to GHCR, tagged with the full commit SHA:
@@ -55,4 +55,5 @@ An image that is already on the server is reused. The deploy script keeps the th
    { "action": "accept", "src": ["tag:ci"], "dst": ["tag:retyped"], "users": ["deploy"] }
    ```
 2. **Tailscale OAuth client.** Go to Settings → OAuth clients. Give it the `auth_keys` write scope and tag `tag:ci`.
-3. **GitHub secrets.** Add `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET` to both repos, under Settings → Secrets and variables → Actions.
+3. **GitHub secrets.** Add `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET` to `nuwaves/retyped`, under Settings → Secrets and variables → Actions, and create a `production` environment.
+4. **GHCR access.** The images keep their old names (`retyped_processing`, `retyped_frontend`). Each package's settings must list `nuwaves/retyped` under Manage Actions access with the Write role, or CI cannot push to it.
