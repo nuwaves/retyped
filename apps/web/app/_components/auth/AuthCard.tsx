@@ -195,10 +195,6 @@ export default function AuthCard({ mode }: AuthCardProps) {
           </li>
           <li className={styles.featureItem}>
             <span className={styles.featureBullet}></span>
-            <span>Highlight and share transcript segments</span>
-          </li>
-          <li className={styles.featureItem}>
-            <span className={styles.featureBullet}></span>
             <span>Bookmark episodes for later</span>
           </li>
           <li className={styles.featureItem}>
