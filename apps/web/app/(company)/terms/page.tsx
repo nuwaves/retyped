@@ -40,9 +40,10 @@ export default function TermsPage() {
       <p className={styles.subtitle}>Last updated: November 24, 2026</p>
 
       <p className={styles.paragraph}>
-        These terms cover your use of retyped (retyped.xyz). &quot;retyped&quot;, &quot;we&quot; and
-        &quot;us&quot; mean the people who run the site. By using the site you agree to these terms.
-        If you don&apos;t agree, please don&apos;t use it. Our{' '}
+        These terms cover your use of retyped (retyped.xyz). retyped is operated by Nuwaves Media
+        Inc., a Wyoming corporation. &quot;Nuwaves&quot;, &quot;we&quot;, &quot;us&quot; and
+        &quot;our&quot; mean Nuwaves Media Inc. By using the site you agree to these terms. If you
+        don&apos;t agree, please don&apos;t use it. Our{' '}
         <Link href="/privacy" className={styles.link}>Privacy Policy</Link> explains how we handle
         personal data.
       </p>
@@ -195,7 +196,8 @@ export default function TermsPage() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Contact</h2>
         <p className={styles.paragraph}>
-          Questions, claims and removal requests:{' '}
+          retyped is operated by Nuwaves Media Inc., a Wyoming corporation. Questions, claims and
+          removal requests:{' '}
           <a href="mailto:support@nuwaves.xyz" className={styles.link}>support@nuwaves.xyz</a>.
         </p>
       </section>
