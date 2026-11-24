@@ -176,6 +176,9 @@ class SitemapTest(CatalogEpisodesTestBase):
                 "new-episodes",
                 "trending-episodes",
                 "trending-shows",
+                "terms",
+                "contact",
+                "privacy",
             },
         )
 

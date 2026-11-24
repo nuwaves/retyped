@@ -21,6 +21,9 @@ STATIC_PAGES = [
     "new-episodes",
     "trending-episodes",
     "trending-shows",
+    "terms",
+    "contact",
+    "privacy",
 ]
 
 
