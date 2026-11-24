@@ -69,16 +69,15 @@ export default function HeroSearch() {
         {/*
           TODO(Billy): the answer below is limited to what the code shows
           (AI summaries and transcripts exist for indexed episodes, and search
-          works over them). Supply, if wanted: whether transcripts are free to
-          read without an account (gating is an open decision), whether every
-          indexed episode has a transcript, an accuracy statement, and any
+          works over them; transcripts are free to read, no account needed).
+          Supply, if wanted: whether every indexed episode has a transcript, an accuracy statement, and any
           wording about playing audio.
         */}
         <h2 className={styles.question}>
           Where can I read a podcast transcript instead of listening?
         </h2>
         <p className={styles.answer}>
-          Retyped has AI summaries and transcripts for indexed podcast episodes, searchable by what was said.
+          Retyped has AI summaries and transcripts for indexed podcast episodes, free to read and searchable by what was said.
         </p>
       </div>
     </div>

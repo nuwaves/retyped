@@ -18,7 +18,7 @@ export default function LoginPage() {
       hero={
         <AuthHero
           title="Discover amazing podcasts"
-          description="Sign in to access your personal library, transcript highlights, and continue discovering amazing podcast content."
+          description="Transcripts are free to read without an account. Sign in to access your personal library, transcript highlights, and continue discovering amazing podcast content."
         />
       }
       authCard={

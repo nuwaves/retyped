@@ -11,8 +11,8 @@ export default function LoginHero() {
         Discover amazing podcasts
       </h1>
       <p className={styles.description}>
-        Sign in to access your personal library, transcript highlights, and 
-        continue discovering amazing podcast content.
+        Transcripts are free to read without an account. Sign in to access your
+        personal library, transcript highlights, and continue discovering amazing podcast content.
       </p>
     </div>
   );
