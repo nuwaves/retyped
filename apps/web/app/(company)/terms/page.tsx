@@ -1,19 +1,20 @@
 import { Metadata } from 'next';
-import Link from 'next/link';
 
 export const metadata: Metadata = {
+  // TODO(Billy): remove `robots` once the real terms text is published.
+  robots: { index: false },
   title: 'Terms of Service - Retyped',
-  description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+  description: 'Terms of Service for Retyped.',
   openGraph: {
     title: 'Terms of Service - Retyped',
-    description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+    description: 'Terms of Service for Retyped.',
     type: 'website',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Retyped' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Terms of Service - Retyped',
-    description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+    description: 'Terms of Service for Retyped.',
   },
 };
 
@@ -38,9 +39,7 @@ export default function TermsPage() {
       */}
       <section className={styles.section}>
         <p className={styles.paragraph} role="note">
-          Terms of Service: being finalized. This page does not yet contain the
-          binding terms. Questions in the meantime: see the{' '}
-          <Link href="/contact" className="underline">contact page</Link>.
+          Terms of Service will be published here.
         </p>
       </section>
     </div>

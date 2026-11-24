@@ -1,18 +1,20 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
+  // TODO(Billy): remove `robots` once the contact details are published.
+  robots: { index: false },
   title: 'Contact Us - Retyped',
-  description: 'Contact the Retyped team — reach us for support, business inquiries, or feedback about our podcast discovery and AI summary platform.',
+  description: 'Contact page for Retyped.',
   openGraph: {
     title: 'Contact Us - Retyped',
-    description: 'Contact the Retyped team — reach us for support, business inquiries, or feedback about our podcast discovery and AI summary platform.',
+    description: 'Contact page for Retyped.',
     type: 'website',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Retyped' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Contact Us - Retyped',
-    description: 'Contact the Retyped team — reach us for support, business inquiries, or feedback about our podcast discovery and AI summary platform.',
+    description: 'Contact page for Retyped.',
   },
 };
 
@@ -33,7 +35,7 @@ export default function ContactPage() {
         <h2 className={styles.sectionTitle}>Get in Touch</h2>
         {/* TODO(Billy): contact email. Replace the bracketed text below. */}
         <p className={styles.paragraph}>
-          Questions, corrections or takedown requests: email [contact email to be added].
+          Contact email: coming soon.
         </p>
       </section>
     </div>
