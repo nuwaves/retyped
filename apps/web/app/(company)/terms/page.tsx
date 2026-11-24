@@ -1,18 +1,20 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
+  // TODO(Billy): remove `robots` once the real terms text is published.
+  robots: { index: false },
   title: 'Terms of Service - Retyped',
-  description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+  description: 'Terms of Service for Retyped.',
   openGraph: {
     title: 'Terms of Service - Retyped',
-    description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+    description: 'Terms of Service for Retyped.',
     type: 'website',
     images: [{ url: '/og-default.png', width: 1200, height: 630, alt: 'Retyped' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Terms of Service - Retyped',
-    description: 'Read the Retyped terms of service — the rules and policies governing your use of our podcast discovery and AI summary platform.',
+    description: 'Terms of Service for Retyped.',
   },
 };
 
@@ -29,70 +31,15 @@ export default function TermsPage() {
     <div className={styles.container}>
       <h1 className={styles.title}>Terms of Service</h1>
 
+      {/*
+        TODO(Billy): terms text from counsel. Do not fill this in with
+        placeholder legal wording; replace the notice below with the final text.
+        TODO(Billy): whether automated/AI access to transcripts is allowed, and
+        the rules for quoting transcripts. Say so explicitly in the final terms.
+      */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>1. Lorem Ipsum</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>2. Dolor Sit Amet</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>3. Consectetur Adipiscing</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>4. Sed Do Eiusmod</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>5. Tempor Incididunt</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>6. Ut Labore Et Dolore</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-        </p>
-        <p className={styles.paragraph}>
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </section>
-
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>7. Magna Aliqua</h2>
-        <p className={styles.paragraph}>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        <p className={styles.paragraph} role="note">
+          Terms of Service will be published here.
         </p>
       </section>
     </div>
