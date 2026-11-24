@@ -11,8 +11,8 @@
 ## Content
 Retyped indexes thousands of podcast episodes and hundreds of shows. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available.
 
-## API
-Structured data is available via JSON API. Episode and show pages include PodcastEpisode and PodcastSeries schema.org markup.
+## Structured data
+Episode and show pages include PodcastEpisode and PodcastSeries schema.org markup.
 
 ## Company
 - [Privacy Policy](https://retyped.xyz/privacy)
