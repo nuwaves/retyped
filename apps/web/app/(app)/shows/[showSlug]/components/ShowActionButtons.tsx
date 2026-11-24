@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHeart, faHeartRegular } from '@/app/_lib/icons';
 import { m } from 'framer-motion';
-import Button from '@/app/_components/common/Button';
+import ClaimShowButton from './ClaimShowButton';
 import { useFollow } from '@/app/_hooks/useFollow';
 
 interface ShowActionButtonsProps {
@@ -13,7 +13,7 @@ interface ShowActionButtonsProps {
 }
 
 const styles = {
-  container: "flex gap-4 items-center"
+  container: "flex gap-4 items-start"
 };
 
 export default function ShowActionButtons({ showId }: ShowActionButtonsProps) {
@@ -29,11 +29,6 @@ export default function ShowActionButtons({ showId }: ShowActionButtonsProps) {
 
     // Call the real API
     await toggleFollow();
-  };
-
-  const handleClaimClick = () => {
-    // In production, this would navigate to claim flow
-    console.log(`Claim podcast for show ID: ${showId}`);
   };
 
   return (
@@ -79,13 +74,7 @@ export default function ShowActionButtons({ showId }: ShowActionButtonsProps) {
         <span>{isFollowing ? 'Unfollow' : 'Follow'}</span>
       </button>
       
-      <Button
-        onClick={handleClaimClick}
-        variant="outline"
-        size="md"
-      >
-        Claim Show
-      </Button>
+      <ClaimShowButton podcastId={parseInt(showId)} />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Button from '@/app/_components/common/Button';
 import OptimizedImage from '@/app/_components/common/OptimizedImage';
 import ShowDescription from '../../components/ShowDescription';
+import ClaimShowButton from '../../components/ClaimShowButton';
 import type { Podcast } from '@/app/_types';
 import { formatCompactNumber } from '@/app/_utils/formatters';
 import { ensureHttps } from '@/app/_utils/imageUrl';
@@ -61,9 +62,7 @@ export default function ShowCard({ show }: ShowCardProps) {
             View Podcast
           </Button>
         </Link>
-        <Button variant="outline" size="md" fullWidth>
-          Claim Show
-        </Button>
+        <ClaimShowButton podcastId={show.id} fullWidth />
       </div>
     </div>
   );
