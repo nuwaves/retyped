@@ -191,11 +191,7 @@ export default function AuthCard({ mode }: AuthCardProps) {
         <ul className={styles.featuresList}>
           <li className={styles.featureItem}>
             <span className={styles.featureBullet}></span>
-            <span>Access full episode transcripts</span>
-          </li>
-          <li className={styles.featureItem}>
-            <span className={styles.featureBullet}></span>
-            <span>Highlight and share transcript segments</span>
+            <span>Request transcripts for episodes that don&apos;t have one yet</span>
           </li>
           <li className={styles.featureItem}>
             <span className={styles.featureBullet}></span>

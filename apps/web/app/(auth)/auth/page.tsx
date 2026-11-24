@@ -14,11 +14,11 @@ export default function LoginPage() {
   return (
     <AuthLayout
       headerTitle="Discover amazing podcasts"
-      headerDescription="Build your personal podcast library with bookmarks, follows, transcript highlights, and more."
+      headerDescription="Build your personal podcast library with bookmarks, follows, and more."
       hero={
         <AuthHero
           title="Discover amazing podcasts"
-          description="Sign in to access your personal library, transcript highlights, and continue discovering amazing podcast content."
+          description="Transcripts are free to read without an account. Sign in to build your personal library of bookmarked episodes and followed podcasts, and request transcripts for episodes that don't have one yet."
         />
       }
       authCard={

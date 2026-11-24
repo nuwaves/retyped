@@ -9,7 +9,7 @@
 - [Search](https://retyped.xyz/search): Full-text search across all indexed episodes and shows.
 
 ## Content
-Retyped indexes thousands of podcast episodes and hundreds of shows. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available.
+Retyped indexes thousands of podcast episodes and hundreds of shows. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available, free to read without an account.
 
 ## Structured data
 Episode and show pages include PodcastEpisode and PodcastSeries schema.org markup.

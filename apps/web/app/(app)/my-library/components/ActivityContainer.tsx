@@ -147,7 +147,7 @@ export default function ActivityContainer() {
       <div className={styles.header}>
         <h1 className={styles.title}>My Library</h1>
         <p className={styles.subtitle}>
-          Your personal collection of bookmarked episodes, followed podcasts, and saved highlights
+          Your personal collection of bookmarked episodes and followed podcasts
         </p>
       </div>
 
