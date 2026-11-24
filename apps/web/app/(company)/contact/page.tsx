@@ -28,7 +28,7 @@ const styles = {
   section: 'mb-12',
   sectionTitle: 'text-xl font-bold mb-4 text-gray-900',
   paragraph: 'text-gray-600 mb-4 leading-relaxed text-base',
-  link: 'text-gray-900 underline hover:no-underline',
+  link: 'text-blue-600 hover:underline',
 };
 
 export default function ContactPage() {
@@ -43,9 +43,8 @@ export default function ContactPage() {
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Podcast owners</h2>
         <p className={styles.paragraph}>
-          If you own or represent a podcast, you can claim it from the show page on retyped. To ask
-          for a transcript or summary to be corrected or removed, email us the show or episode link
-          and how you are connected to the podcast.
+          To claim a podcast, or to ask for a transcript or summary to be corrected or removed,
+          email us the show or episode link and how you are connected to the podcast.
         </p>
       </section>
 
