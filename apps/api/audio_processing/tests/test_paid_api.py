@@ -138,7 +138,7 @@ class ConfigTest(SimpleTestCase):
         **ENABLED,
         "PAID_API_NETWORK": "eip155:8453",
         "PAID_API_ALLOW_MAINNET": True,
-        "PAID_API_ASSET": "0x" + "12" * 20,
+        "PAID_API_ASSET": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",  # Circle USDC on Base
         "PAID_API_ASSET_NAME": "USD Coin",
         "PAID_API_ASSET_VERSION": "2",
     }

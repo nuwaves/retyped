@@ -14,6 +14,7 @@ import logging
 from dataclasses import dataclass, field
 
 import requests
+from django.utils.module_loading import import_string
 
 from .config import PaidApiConfigError
 
@@ -53,6 +54,10 @@ class SettleResult:
         return out
 
 
+class FacilitatorAuthError(Exception):
+    """The auth hook failed, so no request reached the facilitator."""
+
+
 class PaymentAdapter:
     def verify(self, payment_payload, requirements):  # pragma: no cover
         raise NotImplementedError
@@ -66,16 +71,32 @@ class X402FacilitatorAdapter(PaymentAdapter):
         self.config = config
         self.session = session or requests.Session()
 
+    def _headers(self, url, method="POST"):
+        """Static auth headers, then the per-request hook (which wins)."""
+        headers = dict(self.config.facilitator_headers)
+        if self.config.facilitator_auth_hook:
+            try:
+                hook = import_string(self.config.facilitator_auth_hook)
+                headers.update(hook(method, url, self.config) or {})
+            except Exception as exc:
+                logger.exception("x402 facilitator auth hook failed")
+                raise FacilitatorAuthError(str(exc)) from exc
+        return headers
+
     def _post(self, path, payment_payload, requirements):
         body = {
             "x402Version": 2,
             "paymentPayload": payment_payload,
             "paymentRequirements": requirements,
         }
+        url = f"{self.config.facilitator_url}{path}"
         resp = self.session.post(
-            f"{self.config.facilitator_url}{path}",
+            url,
             json=body,
+            headers=self._headers(url),
             timeout=self.config.facilitator_timeout,
+            # Never follow a redirect with credentials attached.
+            allow_redirects=False,
         )
         try:
             data = resp.json()
@@ -102,6 +123,14 @@ class X402FacilitatorAdapter(PaymentAdapter):
     def settle(self, payment_payload, requirements):
         try:
             status, data = self._post("/settle", payment_payload, requirements)
+        except FacilitatorAuthError:
+            # Nothing was sent, so nothing can have settled: safe to release.
+            return SettleResult(
+                False,
+                network=self.config.network,
+                reason="facilitator_auth_error",
+                definite=True,
+            )
         except requests.RequestException as exc:
             # The facilitator may still have broadcast the transfer. Logged so
             # it can be reconciled on chain; the client gets no content.
