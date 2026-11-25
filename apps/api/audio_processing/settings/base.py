@@ -155,6 +155,49 @@ if REDIS_URL:
         }
     }
 
+
+# Paid transcript API (x402), decision D18. OFF by default. Both flags must be
+# True to serve anything: PAID_API_RIGHTS_CLEARED records that the owner has
+# settled the transcript-rights question. Testnet unless PAID_API_ALLOW_MAINNET.
+# Details: docs/paid-api.md. No keys here: payments go to PAID_API_PAY_TO.
+def _env_bool(name, default="False"):
+    return os.environ.get(name, default).strip().lower() in ("1", "true", "yes")
+
+
+PAID_API_ENABLED = _env_bool("PAID_API_ENABLED")
+PAID_API_RIGHTS_CLEARED = _env_bool("PAID_API_RIGHTS_CLEARED")
+# Set True only after GET /api/v1/episodes/<slug>/ stops returning full
+# transcripts; until then the paid API stays off (nobody would need to pay).
+PAID_API_FREE_TRANSCRIPTS_CLOSED = _env_bool("PAID_API_FREE_TRANSCRIPTS_CLOSED")
+PAID_API_ALLOW_MAINNET = _env_bool("PAID_API_ALLOW_MAINNET")
+PAID_API_ADAPTER = os.environ.get("PAID_API_ADAPTER", "x402")
+PAID_API_NETWORK = os.environ.get("PAID_API_NETWORK", "eip155:84532")  # Base Sepolia
+# Empty means "testnet default" (USDC on Base Sepolia, name USDC, version 2),
+# resolved in paid_api/config.py. On any non-testnet network all three must be
+# set explicitly (the testnet token is refused).
+PAID_API_ASSET = os.environ.get("PAID_API_ASSET", "")
+PAID_API_ASSET_NAME = os.environ.get("PAID_API_ASSET_NAME", "")
+PAID_API_ASSET_VERSION = os.environ.get("PAID_API_ASSET_VERSION", "")
+PAID_API_ASSET_DECIMALS = os.environ.get("PAID_API_ASSET_DECIMALS", "6")
+PAID_API_PAY_TO = os.environ.get("PAID_API_PAY_TO", "")
+PAID_API_FACILITATOR_URL = os.environ.get(
+    "PAID_API_FACILITATOR_URL", "https://x402.org/facilitator"
+)
+# Numbers stay raw strings here and are parsed in paid_api/config.py, so a bad
+# value disables the paid API (503) instead of crashing Django at startup.
+PAID_API_FACILITATOR_TIMEOUT = os.environ.get("PAID_API_FACILITATOR_TIMEOUT", "15")
+PAID_API_MAX_TIMEOUT_SECONDS = os.environ.get("PAID_API_MAX_TIMEOUT_SECONDS", "60")
+PAID_API_PRICE_FETCH_USD = os.environ.get("PAID_API_PRICE_FETCH_USD", "0.01")
+PAID_API_PRICE_SEARCH_USD = os.environ.get("PAID_API_PRICE_SEARCH_USD", "0.001")
+PAID_API_RATE_LIMIT = os.environ.get("PAID_API_RATE_LIMIT", "60")
+PAID_API_PAYER_RATE_LIMIT = os.environ.get("PAID_API_PAYER_RATE_LIMIT", "120")
+PAID_API_SEARCH_MAX_LIMIT = os.environ.get("PAID_API_SEARCH_MAX_LIMIT", "20")
+# META key of a trusted client-IP header, e.g. HTTP_CF_CONNECTING_IP. REQUIRED
+# behind Cloudflare or any proxy (otherwise every client shares the proxy's
+# REMOTE_ADDR and one rate-limit bucket). Only set it if the origin is
+# reachable through the proxy alone; otherwise it can be spoofed.
+PAID_API_CLIENT_IP_HEADER = os.environ.get("PAID_API_CLIENT_IP_HEADER", "")
+
 # Celery settings
 CELERY_BROKER_URL = os.environ.get(
     "CELERY_BROKER_URL", f"sqs://{AWS_ACCESS_KEY_ID}:{AWS_SECRET_ACCESS_KEY}@"
