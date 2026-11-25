@@ -78,7 +78,7 @@ class Command(BaseCommand):
                     warn("MAINNET: real money. Check payTo against the owner's note.")
                 else:
                     fail("mainnet network without PAID_API_ALLOW_MAINNET")
-            host = urlparse(config.facilitator_url).netloc
+            host = urlparse(config.facilitator_url).hostname
             has_auth = bool(config.facilitator_headers or config.facilitator_auth_hook)
             self.stdout.write(
                 f"      facilitator={host} auth={'configured' if has_auth else 'none'}"

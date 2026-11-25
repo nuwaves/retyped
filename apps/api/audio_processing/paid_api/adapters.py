@@ -79,8 +79,11 @@ class X402FacilitatorAdapter(PaymentAdapter):
                 hook = import_string(self.config.facilitator_auth_hook)
                 headers.update(hook(method, url, self.config) or {})
             except Exception as exc:
-                logger.exception("x402 facilitator auth hook failed")
-                raise FacilitatorAuthError(str(exc)) from exc
+                # Type only: a hook's message or traceback could quote key material.
+                logger.error(
+                    "x402 facilitator auth hook failed: %s", type(exc).__name__
+                )
+                raise FacilitatorAuthError(type(exc).__name__) from None
         return headers
 
     def _post(self, path, payment_payload, requirements):

@@ -160,6 +160,16 @@ class FacilitatorAuthConfigTest(SimpleTestCase):
                     with self.assertRaises(PaidApiConfigError):
                         get_config()
 
+    def test_facilitator_url_with_credentials_or_query_refused(self):
+        for url in (
+            "https://user:pw@facilitator.test",
+            "https://facilitator.test/x?key=secret",
+        ):
+            with self.subTest(url=url):
+                with override_settings(**ENABLED, PAID_API_FACILITATOR_URL=url):
+                    with self.assertRaises(PaidApiConfigError):
+                        get_config()
+
     def test_secrets_not_in_repr(self):
         with override_settings(
             **ENABLED,

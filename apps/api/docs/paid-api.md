@@ -101,7 +101,7 @@ exposed headers yet; add them if browser-based payers are in scope.
 Mainnet needs a production facilitator. Everything is configured by
 environment; no credential is stored in the repo.
 
-- `PAID_API_FACILITATOR_URL`: base URL (`/verify`, `/settle` are appended).
+- `PAID_API_FACILITATOR_URL`: base URL (`/verify`, `/settle` are appended). No credentials or query string in the URL (refused); use the headers below. Auth hooks must not put secrets in exception messages (only the exception type is logged).
 - Static auth: `PAID_API_FACILITATOR_BEARER_TOKEN` and/or
   `PAID_API_FACILITATOR_HEADERS` (JSON object). Sent on every facilitator
   call. Redirects are never followed, so credentials can't be forwarded.
@@ -214,13 +214,13 @@ curl -si "https://retyped.xyz/api/v1/paid/search/?q=rust" \
   | sed -n 's/^payment-required: //Ip' | tr -d '\r' | base64 -d | python3 -m json.tool
 ```
 
-Expect: HTTP 402; in `accepts[0]`, `network` = `eip155:8453`, `asset` =
+(Run from a Linux shell; `sed -I` and `base64 -d` differ on macOS.) Expect: HTTP 402; in `accepts[0]`, `network` = `eip155:8453`, `asset` =
 `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`, `payTo` = Billy's address,
 `amount` = the atomic price (`1000` for $0.001 search, `10000` for $0.01
 transcript), and `extra.name`/`extra.version` = the values you
 set (`USD Coin` / `2`). Anything different: roll back, then investigate.
 `https://retyped.xyz/llms.txt` should now end with a "Paid API (x402)" section
-(up to 5 minutes after the flip). A first real payment, if wanted, is a
+(up to 5 minutes after the flip; the web app reads it from the backend at `DJANGO_BACKEND`, the same host it already uses for the API). A first real payment, if wanted, is a
 separate owner-run step with a small amount.
 
 ### Rollback

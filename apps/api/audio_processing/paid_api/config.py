@@ -8,6 +8,7 @@ import math
 import re
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.utils.module_loading import import_string
@@ -155,7 +156,9 @@ def _facilitator_auth():
                 raise PaidApiConfigError(
                     "PAID_API_FACILITATOR_AUTH_HOOK is not callable"
                 )
-        except ImportError as exc:
+        except PaidApiConfigError:
+            raise
+        except Exception as exc:  # ImportError, or an error inside the module
             raise PaidApiConfigError(
                 "PAID_API_FACILITATOR_AUTH_HOOK cannot be imported"
             ) from exc
@@ -248,6 +251,13 @@ def get_config():
     facilitator_url = (getattr(s, "PAID_API_FACILITATOR_URL", "") or "").rstrip("/")
     if adapter == "x402" and not facilitator_url.startswith("https://"):
         raise PaidApiConfigError("PAID_API_FACILITATOR_URL must be an https URL")
+    if adapter == "x402":
+        parsed = urlparse(facilitator_url)
+        if parsed.username or parsed.password or parsed.query:
+            # Credentials belong in headers; URLs end up in error logs.
+            raise PaidApiConfigError(
+                "PAID_API_FACILITATOR_URL must not contain credentials or a query"
+            )
 
     facilitator_headers, facilitator_hook = _facilitator_auth()
 
