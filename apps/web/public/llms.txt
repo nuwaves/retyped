@@ -9,7 +9,7 @@
 - [Search](https://retyped.xyz/search): Full-text search across all indexed episodes and shows.
 
 ## Content
-Retyped indexes 18,281 episodes across 70 shows, as of November 2026. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available, free to read without an account. Quote freely with a link to the episode page.
+Retyped indexes 18,281 episodes across 70 shows, as of November 2026. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available, free to read without an account. Quote freely with a link to the episode page; no bulk copying (see /terms).
 
 ## AI use
 AI search and answer engines may index and cite retyped with a link; no AI training without written permission (see /terms).
