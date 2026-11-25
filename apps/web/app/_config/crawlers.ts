@@ -11,6 +11,7 @@
 //   Apple       https://support.apple.com/en-us/119829
 //   Meta        https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
 //   Common Crawl https://commoncrawl.org/ccbot
+//   Mistral     https://docs.mistral.ai/robots/
 // - Community list: https://github.com/ai-robots-txt/ai.robots.txt
 //   (robots.json at commit eba7fddcfdac4ab9c079322464422c5c41af8f44, 2026-11-22),
 //   used only for bots whose stated function is model training or dataset building.
@@ -20,8 +21,16 @@
 // without written permission.
 //
 // Not listed here on purpose (they fall under the `*` group and stay allowed):
-// general crawlers with mixed uses (Amazonbot, GoogleOther). Revisit with AI
-// Crawl Control data (D16).
+// - general crawlers with mixed uses (Amazonbot, GoogleOther). Revisit with AI
+//   Crawl Control data (D16).
+// - user-initiated fetchers that load one page because a person asked an AI
+//   assistant: Meta-ExternalFetcher, MistralAI-User, DuckAssistBot (the last
+//   feeds DuckDuckGo answers). Same reasoning as ChatGPT-User / Claude-User.
+// - omgilibot: legacy Webz.io token; ai.robots.txt says the `omgili` agent is
+//   the one still used, so only `omgili` is listed.
+//
+// Entries marked "community-listed" come from ai.robots.txt robots.json only
+// and are not documented by the vendor.
 //
 // robots.txt is advisory. Bots that ignore it have to be blocked at Cloudflare.
 
@@ -56,14 +65,14 @@ export const TRAINING_CRAWLERS = [
   'Bytespider', // ByteDance LLM training
   'TikTokSpider', // ByteDance LLM training
   'meta-externalagent', // Meta model training
-  'FacebookBot', // Meta language-model training
+  'FacebookBot', // Meta speech/language-model data; link previews use facebookexternalhit (allowed)
   'cohere-training-data-crawler', // Cohere training data
-  'MistralAI-Training', // Mistral training
-  'DeepSeekBot', // DeepSeek training
+  'MistralAI-Training', // Mistral training (documented at docs.mistral.ai/robots)
+  'DeepSeekBot', // DeepSeek training; community-listed (ai.robots.txt), not vendor-documented
   'AI2Bot', // Ai2 open-model training
   'Ai2Bot-Dolma', // Ai2 Dolma dataset
-  'Hunyuan', // Tencent training crawler
-  'MoonshotBot', // Moonshot / Kimi training crawler
+  'Hunyuan', // Tencent training crawler; community-listed (ai.robots.txt), not vendor-documented
+  'MoonshotBot', // Moonshot / Kimi training crawler; community-listed (ai.robots.txt), not vendor-documented
   'PanguBot', // Huawei data scraper
   'Timpibot', // training data for LLMs
   'YandexAdditional', // YandexGPT
@@ -71,4 +80,8 @@ export const TRAINING_CRAWLERS = [
   'img2dataset', // dataset builder
   'Cotoyogi', // LLM scraper
   'ICC-Crawler', // NICT AI training
+  'Diffbot', // knowledge-graph data provider; community-listed (ai.robots.txt), not vendor-documented
+  'omgili', // Webz.io; data sold, incl. for LLM training; community-listed (ai.robots.txt), not vendor-documented
+  'Webzio-Extended', // Webz.io AI data scraper; community-listed (ai.robots.txt), not vendor-documented
+  'ImagesiftBot', // ImageSift image scraper; community-listed (ai.robots.txt), not vendor-documented
 ];
