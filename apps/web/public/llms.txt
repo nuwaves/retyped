@@ -11,6 +11,9 @@
 ## Content
 Retyped indexes thousands of podcast episodes and hundreds of shows. Each episode page includes an AI-generated summary, key takeaways, and a full transcript where available, free to read without an account.
 
+## AI use
+AI search and answer engines may index and cite retyped with a link; no AI training without written permission (see /terms).
+
 ## Structured data
 Episode and show pages include PodcastEpisode and PodcastSeries schema.org markup.
 
