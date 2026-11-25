@@ -21,6 +21,7 @@ PAY_TO = "0x" + "aB" * 20  # dummy test address, not a real wallet
 PAYER = "0x" + "cD" * 20  # dummy test address, not a real wallet
 
 ENABLED = {
+    "DEBUG": True,  # tests run on LocMem; the shared-cache guard is tested below
     "PAID_API_ENABLED": True,
     "PAID_API_RIGHTS_CLEARED": True,
     "PAID_API_FREE_TRANSCRIPTS_CLOSED": True,
@@ -133,11 +134,75 @@ class ConfigTest(SimpleTestCase):
         with self.assertRaises(PaidApiConfigError):
             get_config()
 
-    @override_settings(
-        **{**ENABLED, "PAID_API_NETWORK": "eip155:8453", "PAID_API_ALLOW_MAINNET": True}
-    )
+    MAINNET = {
+        **ENABLED,
+        "PAID_API_NETWORK": "eip155:8453",
+        "PAID_API_ALLOW_MAINNET": True,
+        "PAID_API_ASSET": "0x" + "12" * 20,
+        "PAID_API_ASSET_NAME": "USD Coin",
+        "PAID_API_ASSET_VERSION": "2",
+    }
+
+    @override_settings(**MAINNET)
     def test_mainnet_with_opt_in(self):
-        self.assertEqual(get_config().network, "eip155:8453")
+        config = get_config()
+        self.assertEqual(config.network, "eip155:8453")
+        self.assertEqual(config.asset_name, "USD Coin")
+
+    def test_mainnet_needs_explicit_asset_name_and_version(self):
+        for name, value in [
+            ("PAID_API_ASSET", ""),
+            ("PAID_API_ASSET", ENABLED["PAID_API_ASSET"]),  # testnet default
+            ("PAID_API_ASSET", ENABLED["PAID_API_ASSET"].lower()),
+            ("PAID_API_ASSET_NAME", ""),
+            ("PAID_API_ASSET_VERSION", ""),
+        ]:
+            with self.subTest(name=name, value=value):
+                with override_settings(**{**self.MAINNET, name: value}):
+                    with self.assertRaises(PaidApiConfigError):
+                        get_config()
+
+    @override_settings(**{**ENABLED, "PAID_API_ASSET": "", "PAID_API_ASSET_NAME": ""})
+    def test_testnet_falls_back_to_default_asset(self):
+        config = get_config()
+        self.assertEqual(config.asset, "0x036CbD53842c5426634e7929541eC2318f3dCF7e")
+        self.assertEqual((config.asset_name, config.asset_version), ("USDC", "2"))
+
+    def test_trailing_newline_rejected_in_config_addresses(self):
+        for name in ("PAID_API_PAY_TO", "PAID_API_ASSET"):
+            with self.subTest(name=name):
+                with override_settings(**{**ENABLED, name: ENABLED[name] + "\n"}):
+                    with self.assertRaises(PaidApiConfigError):
+                        get_config()
+
+    def test_unshared_cache_refused_outside_debug(self):
+        for backend in (
+            "django.core.cache.backends.locmem.LocMemCache",
+            "django.core.cache.backends.dummy.DummyCache",
+        ):
+            with self.subTest(backend=backend):
+                with override_settings(
+                    **{**ENABLED, "DEBUG": False},
+                    CACHES={"default": {"BACKEND": backend}},
+                ):
+                    with self.assertRaises(PaidApiConfigError):
+                        get_config()
+
+    def test_unshared_cache_allowed_in_debug(self):
+        with override_settings(**ENABLED):
+            get_config()
+
+    def test_shared_cache_backend_allowed_outside_debug(self):
+        with override_settings(
+            **{**ENABLED, "DEBUG": False},
+            CACHES={
+                "default": {
+                    "BACKEND": "django.core.cache.backends.redis.RedisCache",
+                    "LOCATION": "redis://127.0.0.1:6379/1",
+                }
+            },
+        ):
+            get_config()
 
     @override_settings(**{**ENABLED, "PAID_API_PAY_TO": ""})
     def test_missing_pay_to_rejected(self):
@@ -205,6 +270,19 @@ class X402FormatTest(SimpleTestCase):
             with self.subTest(auth=auth):
                 payment = {"payload": {"authorization": auth}}
                 self.assertIsNone(x402.authorization(payment))
+
+    def test_trailing_newline_rejected_in_from_and_nonce(self):
+        nonce = f"0x{7:064x}"
+        for auth in [
+            {"from": PAYER + "\n", "nonce": nonce},
+            {"from": PAYER, "nonce": nonce + "\n"},
+        ]:
+            with self.subTest(auth=auth):
+                self.assertIsNone(
+                    x402.authorization({"payload": {"authorization": auth}})
+                )
+        ok = {"from": PAYER, "nonce": nonce}
+        self.assertIsNotNone(x402.authorization({"payload": {"authorization": ok}}))
 
     def test_payment_id_ignores_header_encoding(self):
         a = x402.decode_signature(payment_header(self.req))
@@ -351,6 +429,69 @@ class PaidApiViewTest(TestCase):
 
     def test_enabled_rejects_non_get(self):
         self.assertEqual(self.client.post(self.url).status_code, 405)
+
+    def test_head_not_allowed_on_paid_routes(self):
+        for url in (
+            self.url,
+            reverse("v1:api-v1-paid-search") + "?q=rust",
+            reverse("v1:api-v1-paid-info"),
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(self.client.head(url).status_code, 405)
+        self.assertEqual(self.adapter.verify_calls, [])
+
+    @override_settings(DEBUG=False)
+    def test_unshared_cache_returns_503(self):
+        self.assertEqual(self.client.get(self.url).status_code, 503)
+
+    @override_settings(PAID_API_ENABLED=False)
+    def test_real_urls_404_when_flag_off(self):
+        # Literal paths through the root URLconf, not reverse().
+        for path in (
+            "/api/v1/paid/",
+            "/api/v1/paid/search/?q=rust",
+            f"/api/v1/paid/episodes/{self.episode.slug}/transcript/",
+        ):
+            with self.subTest(path=path):
+                self.assertEqual(self.client.get(path).status_code, 404)
+
+    def test_verify_exception_fails_closed_and_frees_lock(self):
+        req = self._requirements()
+        with patch.object(self.adapter, "verify", side_effect=RuntimeError("boom")):
+            resp = self._pay(self.url, req)
+        self.assertEqual(resp.status_code, 503)
+        self.assertNotIn("transcript", resp.content.decode())
+        # Lock was released: the same payment can still be used.
+        self.assertEqual(self._pay(self.url, req).status_code, 200)
+
+    def test_settle_exception_is_unknown_outcome(self):
+        req = self._requirements()
+        with patch.object(self.adapter, "settle", side_effect=RuntimeError("boom")):
+            with self.assertLogs("audio_processing.paid_api.views", "ERROR"):
+                resp = self._pay(self.url, req)
+        self.assertEqual(resp.status_code, 402)
+        self.assertNotIn("Rust", resp.content.decode())
+        # Lock kept: the payment can't be replayed.
+        resp = self._pay(self.url, req)
+        self.assertEqual(resp.status_code, 402)
+        self.assertEqual(len(self.adapter.verify_calls), 1)
+
+    def test_settle_success_without_transaction_is_not_served(self):
+        req = self._requirements()
+        ok = SettleResult(True, payer=PAYER, transaction="", network="eip155:84532")
+        with patch.object(self.adapter, "settle", return_value=ok):
+            resp = self._pay(self.url, req)
+        self.assertEqual(resp.status_code, 402)
+        self.assertNotIn("Rust", resp.content.decode())
+        self.assertEqual(self._pay(self.url, req).status_code, 402)  # still locked
+        self.assertEqual(len(self.adapter.verify_calls), 1)
+
+    def test_settle_network_mismatch_is_logged(self):
+        req = self._requirements()
+        odd = SettleResult(True, payer=PAYER, transaction="0xabc", network="eip155:1")
+        with patch.object(self.adapter, "settle", return_value=odd):
+            with self.assertLogs("audio_processing.paid_api.views", "WARNING"):
+                self._pay(self.url, req)
 
     @override_settings(PAID_API_FREE_TRANSCRIPTS_CLOSED=False)
     def test_free_path_open_returns_404(self):

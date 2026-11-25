@@ -21,7 +21,19 @@ TESTNET_NETWORKS = frozenset(
 # The "exact" scheme on EVM networks is the only one implemented.
 SUPPORTED_SCHEME = "exact"
 
-EVM_ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
+# Always matched with fullmatch(): "$" would accept a trailing newline.
+EVM_ADDRESS_RE = re.compile(r"0x[0-9a-fA-F]{40}")
+
+# USDC on Base Sepolia (Circle testnet token): the testnet default only.
+TESTNET_DEFAULT_ASSET = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
+TESTNET_DEFAULT_ASSET_NAME = "USDC"
+TESTNET_DEFAULT_ASSET_VERSION = "2"
+
+# Cache backends that are per process or discard everything.
+UNSHARED_CACHE_BACKENDS = (
+    "django.core.cache.backends.locmem.LocMemCache",
+    "django.core.cache.backends.dummy.DummyCache",
+)
 
 ADAPTERS = ("x402", "cloudflare")
 
@@ -113,9 +125,26 @@ def is_enabled():
     )
 
 
+def check_shared_cache():
+    """
+    The payment replay lock and rate limits live in the default cache, so it
+    must be shared across workers. Outside DEBUG, per-process (LocMem) and
+    no-op (Dummy) backends are refused.
+    """
+    if settings.DEBUG:
+        return
+    backend = (getattr(settings, "CACHES", {}).get("default") or {}).get("BACKEND", "")
+    if backend in UNSHARED_CACHE_BACKENDS:
+        raise PaidApiConfigError(
+            "the default cache must be shared across workers (set REDIS_URL); "
+            f"{backend.rsplit('.', 1)[-1]} is not safe for payment replay locks"
+        )
+
+
 def get_config():
     """Build and validate the config. Raises PaidApiConfigError."""
     s = settings
+    check_shared_cache()
     adapter = getattr(s, "PAID_API_ADAPTER", "x402")
     if adapter not in ADAPTERS:
         raise PaidApiConfigError(f"PAID_API_ADAPTER must be one of {ADAPTERS}")
@@ -132,11 +161,30 @@ def get_config():
         )
 
     pay_to = getattr(s, "PAID_API_PAY_TO", "")
-    if not EVM_ADDRESS_RE.match(pay_to or ""):
+    if not EVM_ADDRESS_RE.fullmatch(pay_to or ""):
         raise PaidApiConfigError("PAID_API_PAY_TO must be a 0x-prefixed EVM address")
 
-    asset = getattr(s, "PAID_API_ASSET", "")
-    if not EVM_ADDRESS_RE.match(asset or ""):
+    is_testnet = network in TESTNET_NETWORKS
+    asset = getattr(s, "PAID_API_ASSET", "") or ""
+    asset_name = getattr(s, "PAID_API_ASSET_NAME", "") or ""
+    asset_version = str(getattr(s, "PAID_API_ASSET_VERSION", "") or "")
+    if is_testnet:
+        asset = asset or TESTNET_DEFAULT_ASSET
+        asset_name = asset_name or TESTNET_DEFAULT_ASSET_NAME
+        asset_version = asset_version or TESTNET_DEFAULT_ASSET_VERSION
+    else:
+        # Never inherit testnet token defaults on a network with real money.
+        if not asset or asset.lower() == TESTNET_DEFAULT_ASSET.lower():
+            raise PaidApiConfigError(
+                "PAID_API_ASSET must be set explicitly to the network's token "
+                "(not the Base Sepolia USDC default) on a non-testnet network"
+            )
+        if not asset_name or not asset_version:
+            raise PaidApiConfigError(
+                "PAID_API_ASSET_NAME and PAID_API_ASSET_VERSION must be set "
+                "explicitly on a non-testnet network"
+            )
+    if not EVM_ADDRESS_RE.fullmatch(asset):
         raise PaidApiConfigError("PAID_API_ASSET must be a 0x-prefixed token address")
 
     decimals = _int("PAID_API_ASSET_DECIMALS", 6, 0, 18)
@@ -149,8 +197,8 @@ def get_config():
         adapter=adapter,
         network=network,
         asset=asset,
-        asset_name=getattr(s, "PAID_API_ASSET_NAME", "USDC"),
-        asset_version=str(getattr(s, "PAID_API_ASSET_VERSION", "2")),
+        asset_name=asset_name,
+        asset_version=asset_version,
         asset_decimals=decimals,
         pay_to=pay_to,
         facilitator_url=facilitator_url,

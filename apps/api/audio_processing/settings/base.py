@@ -172,12 +172,12 @@ PAID_API_FREE_TRANSCRIPTS_CLOSED = _env_bool("PAID_API_FREE_TRANSCRIPTS_CLOSED")
 PAID_API_ALLOW_MAINNET = _env_bool("PAID_API_ALLOW_MAINNET")
 PAID_API_ADAPTER = os.environ.get("PAID_API_ADAPTER", "x402")
 PAID_API_NETWORK = os.environ.get("PAID_API_NETWORK", "eip155:84532")  # Base Sepolia
-# USDC on Base Sepolia (Circle testnet token).
-PAID_API_ASSET = os.environ.get(
-    "PAID_API_ASSET", "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
-)
-PAID_API_ASSET_NAME = os.environ.get("PAID_API_ASSET_NAME", "USDC")
-PAID_API_ASSET_VERSION = os.environ.get("PAID_API_ASSET_VERSION", "2")
+# Empty means "testnet default" (USDC on Base Sepolia, name USDC, version 2),
+# resolved in paid_api/config.py. On any non-testnet network all three must be
+# set explicitly (the testnet token is refused).
+PAID_API_ASSET = os.environ.get("PAID_API_ASSET", "")
+PAID_API_ASSET_NAME = os.environ.get("PAID_API_ASSET_NAME", "")
+PAID_API_ASSET_VERSION = os.environ.get("PAID_API_ASSET_VERSION", "")
 PAID_API_ASSET_DECIMALS = os.environ.get("PAID_API_ASSET_DECIMALS", "6")
 PAID_API_PAY_TO = os.environ.get("PAID_API_PAY_TO", "")
 PAID_API_FACILITATOR_URL = os.environ.get(

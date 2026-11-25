@@ -54,13 +54,13 @@ Guards:
 | `PAID_API_PAY_TO` | empty | **Public** receiving address. Never put a private key anywhere in this app |
 | `PAID_API_NETWORK` | `eip155:84532` | Base Sepolia (testnet) |
 | `PAID_API_ALLOW_MAINNET` | `False` | Needed for any non-testnet network; real money |
-| `PAID_API_ASSET` | Base Sepolia USDC | Token contract |
-| `PAID_API_ASSET_NAME` / `_VERSION` / `_DECIMALS` | `USDC` / `2` / `6` | EIP-712 domain and units |
+| `PAID_API_ASSET` | empty (testnet: Base Sepolia USDC) | Token contract. On a non-testnet network it must be set explicitly and must not be the Base Sepolia USDC address |
+| `PAID_API_ASSET_NAME` / `_VERSION` / `_DECIMALS` | empty (testnet: `USDC` / `2`) / `6` | EIP-712 domain and units. Name and version must be set explicitly on a non-testnet network |
 | `PAID_API_FACILITATOR_URL` | `https://x402.org/facilitator` | Public testnet facilitator. Mainnet needs a production facilitator (e.g. Coinbase CDP, which needs an account) |
 | `PAID_API_PRICE_FETCH_USD` / `_SEARCH_USD` | `0.01` / `0.001` | Per request |
 | `PAID_API_RATE_LIMIT` / `PAID_API_PAYER_RATE_LIMIT` | `60` / `120` | Per minute |
 | `PAID_API_SEARCH_MAX_LIMIT` | `20` | Max search results |
-| `PAID_API_CLIENT_IP_HEADER` | empty | **Required behind Cloudflare or any proxy**, e.g. `HTTP_CF_CONNECTING_IP`; otherwise every client shares the proxy's IP and one rate-limit bucket. Only safe when the origin is reachable through Cloudflare alone (tunnel or firewall to Cloudflare IPs); otherwise it can be spoofed |
+| `PAID_API_CLIENT_IP_HEADER` | empty | **Required behind Cloudflare or any proxy**, e.g. `HTTP_CF_CONNECTING_IP`. Use a value the proxy sets itself, never the leftmost `X-Forwarded-For` entry (the client controls it); otherwise every client shares the proxy's IP and one rate-limit bucket. Only safe when the origin is reachable through Cloudflare alone (tunnel or firewall to Cloudflare IPs); otherwise it can be spoofed |
 | `PAID_API_ADAPTER` | `x402` | `cloudflare` is a placeholder that fails closed |
 
 Rate limits and the replay lock need a shared, persistent cache (`REDIS_URL`)
@@ -68,6 +68,13 @@ in production. With the local-memory cache they only hold per worker process,
 and an evicted or flushed cache forgets settled payments (the facilitator's
 on-chain nonce check is then the only replay guard). Moving the lock to a DB
 table with a unique constraint is a possible hardening step before mainnet.
+
+The API refuses to run (503) when the default cache is `LocMemCache` or
+`DummyCache` and `DEBUG` is off. Redis must not evict keys: use
+`maxmemory-policy noeviction` (or a dedicated Redis DB/instance for this
+cache), because an evicted lock key lets a settled payment be replayed.
+
+Paid routes accept `GET` only; `HEAD` and other methods get 405.
 
 Browser clients: `PAYMENT-REQUIRED` / `PAYMENT-RESPONSE` aren't in CORS
 exposed headers yet; add them if browser-based payers are in scope.

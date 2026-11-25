@@ -6,7 +6,7 @@ GET /api/v1/paid/                              free: prices and terms
 GET /api/v1/paid/search/?q=...&limit=N         paid: transcript search
 GET /api/v1/paid/episodes/<slug>/transcript/   paid: one full transcript
 
-All of them return 404 (for every HTTP method) unless PAID_API_ENABLED,
+Paid routes accept GET only (405 otherwise). All of them return 404 (for every HTTP method) unless PAID_API_ENABLED,
 PAID_API_RIGHTS_CLEARED and PAID_API_FREE_TRANSCRIPTS_CLOSED are all True.
 """
 
@@ -19,7 +19,7 @@ from django.http import Http404, HttpResponseNotAllowed, JsonResponse
 from ..models import Episode
 from ..views.search_viewsets import build_search_query
 from . import x402
-from .adapters import get_adapter
+from .adapters import SettleResult, get_adapter
 from .config import PaidApiConfigError, get_config, is_enabled
 from .ratelimit import hit
 
@@ -74,8 +74,8 @@ def _setup(request):
     """Common gate: flag, method, config, IP rate limit. Returns (config, error)."""
     if not is_enabled():
         raise Http404()
-    if request.method not in ("GET", "HEAD"):
-        return None, HttpResponseNotAllowed(["GET", "HEAD"])
+    if request.method != "GET":
+        return None, HttpResponseNotAllowed(["GET"])
     try:
         config = get_config()
     except PaidApiConfigError as exc:
@@ -142,7 +142,13 @@ def _charge(request, config, price, description, produce):
             request, description, requirements, "payment already submitted"
         )
 
-    verified = adapter.verify(payment, requirements)
+    try:
+        verified = adapter.verify(payment, requirements)
+    except Exception:
+        # Nothing was settled yet, so free the payment and fail closed.
+        cache.delete(lock_key)
+        logger.exception("paid API verify raised unexpectedly")
+        return _json({"error": "paid API unavailable"}, status=503)
     if not verified.is_valid:
         cache.delete(lock_key)
         return _payment_required(
@@ -171,7 +177,34 @@ def _charge(request, config, price, description, produce):
         cache.delete(lock_key)
         return _json(body)
 
-    settled = adapter.settle(payment, requirements)
+    try:
+        settled = adapter.settle(payment, requirements)
+    except Exception:
+        # The transfer may have happened: unknown outcome, keep the lock.
+        logger.exception("paid API settle raised unexpectedly")
+        settled = SettleResult(
+            False,
+            network=config.network,
+            reason="settle_error",
+            definite=False,
+        )
+    if settled.network and settled.network != config.network:
+        logger.warning(
+            "paid API settle network %s differs from configured %s (payment %s)",
+            settled.network,
+            config.network,
+            payment_id,
+        )
+    if settled.success and not settled.transaction:
+        # A success with no transaction hash can't be reconciled or trusted.
+        settled = SettleResult(
+            False,
+            payer=settled.payer,
+            network=settled.network or config.network,
+            reason="missing_transaction",
+            definite=False,
+            raw=settled.raw,
+        )
     response_header = {x402.HEADER_RESPONSE: x402.encode(settled.as_header())}
     if not settled.success:
         if settled.definite:

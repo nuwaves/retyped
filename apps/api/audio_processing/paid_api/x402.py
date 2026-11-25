@@ -28,8 +28,9 @@ MAX_SIGNATURE_HEADER_BYTES = 8192
 # Requirement fields holding addresses (compared case-insensitively).
 ADDRESS_FIELDS = ("asset", "payTo")
 
-EVM_ADDRESS_RE = re.compile(r"^0x[0-9a-fA-F]{40}$")
-NONCE_RE = re.compile(r"^0x[0-9a-fA-F]{64}$")
+# Always matched with fullmatch(): "$" would accept a trailing newline.
+EVM_ADDRESS_RE = re.compile(r"0x[0-9a-fA-F]{40}")
+NONCE_RE = re.compile(r"0x[0-9a-fA-F]{64}")
 
 
 class InvalidPaymentHeader(ValueError):
@@ -114,9 +115,9 @@ def authorization(payment):
     if not isinstance(auth, dict):
         return None
     payer, nonce = auth.get("from"), auth.get("nonce")
-    if not isinstance(payer, str) or not EVM_ADDRESS_RE.match(payer):
+    if not isinstance(payer, str) or not EVM_ADDRESS_RE.fullmatch(payer):
         return None
-    if not isinstance(nonce, str) or not NONCE_RE.match(nonce):
+    if not isinstance(nonce, str) or not NONCE_RE.fullmatch(nonce):
         return None
     return payer.lower(), nonce.lower()
 
