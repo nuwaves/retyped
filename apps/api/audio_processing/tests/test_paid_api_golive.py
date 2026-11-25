@@ -166,7 +166,7 @@ class FacilitatorAuthConfigTest(SimpleTestCase):
             "https://facilitator.test/x?key=secret",
         ):
             with self.subTest(url=url):
-                with override_settings(**ENABLED, PAID_API_FACILITATOR_URL=url):
+                with override_settings(**{**ENABLED, "PAID_API_FACILITATOR_URL": url}):
                     with self.assertRaises(PaidApiConfigError):
                         get_config()
 
