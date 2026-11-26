@@ -1,3 +1,6 @@
+// Lives in the (show) route group so this skeleton wraps only the show page.
+// At [showSlug]/ it would also wrap episode pages, whose content then streamed
+// in after the skeleton instead of arriving in the initial HTML.
 export default function ShowLoading() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl animate-pulse">

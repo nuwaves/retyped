@@ -8,7 +8,7 @@ import RecommendedEpisodes from "./components/RecommendedEpisodes";
 import RelevantLinks from "./components/RelevantLinks";
 import { api, safeApi } from "@/app/_lib/serverApi";
 import { Podcast, Episode, RelatedContent, EMPTY_RELATED_CONTENT } from "@/app/_types";
-import { convertToISO8601Duration, episodeHasContent, extractSummaryHeadings, stripHtml, summaryToDescription } from "@/app/_utils/formatters";
+import { convertToISO8601Duration, episodeHasContent, extractSummaryHeadings, stripHtml, summaryToDescription, transcriptToPlainText } from "@/app/_utils/formatters";
 import { serializeJsonLd } from "@/app/_utils/jsonLd";
 
 // ISR: Revalidate every hour for fresh content
@@ -182,6 +182,8 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
     })),
   } : null;
 
+  const transcriptText = transcriptToPlainText(episode);
+
   const podcastEpisodeData = {
     '@context': 'https://schema.org',
     '@type': 'PodcastEpisode',
@@ -189,6 +191,7 @@ export default async function EpisodePage({ params }: EpisodePageProps) {
     description: metaDescription,
     url: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://retyped.xyz'}/shows/${showSlug}/${episodeSlug}`,
     datePublished: episode.release_date,
+    ...(transcriptText && { transcript: transcriptText }),
     ...(episode.duration && {
       duration: convertToISO8601Duration(episode.duration),
     }),

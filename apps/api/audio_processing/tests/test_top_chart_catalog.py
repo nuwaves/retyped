@@ -86,6 +86,7 @@ class ImportTopChartTest(TestCase):
 class CatalogEpisodesTestBase(TestCase):
     def setUp(self):
         cache.clear()
+        self.addCleanup(cache.clear)
         self.podcast = Podcast.objects.create(
             name="Catalog Show", url="https://example.com/catalog"
         )
@@ -187,6 +188,47 @@ class SitemapTest(CatalogEpisodesTestBase):
         self.assertTrue(
             any(loc.endswith(f"/shows/{self.podcast.slug}") for loc in locs)
         )
+
+    def test_podcast_sitemap_skips_shows_without_episodes(self):
+        empty = Podcast.objects.create(
+            name="Empty Show", url="https://example.com/empty-show-feed"
+        )
+        locs = self._locs("/sitemap-podcasts-1.xml")
+        self.assertFalse(any(loc.endswith(f"/shows/{empty.slug}") for loc in locs))
+        self.assertTrue(
+            any(loc.endswith(f"/shows/{self.podcast.slug}") for loc in locs)
+        )
+
+        # Listed as soon as it has an episode.
+        Episode.objects.create(
+            podcast=empty,
+            title="First",
+            raw_audio_url="https://example.com/first.mp3",
+        )
+        locs = self._locs("/sitemap-podcasts-1.xml")
+        self.assertTrue(any(loc.endswith(f"/shows/{empty.slug}") for loc in locs))
+
+    def test_sitemap_index_podcast_page_count_follows_shows_with_episodes(self):
+        def podcast_pages():
+            # Cached counts and the cached index would hide the change.
+            cache.clear()
+            return [
+                loc for loc in self._locs("/sitemap.xml") if "/sitemap-podcasts-" in loc
+            ]
+
+        # One show per page, so the page count equals the number of listed shows.
+        with patch("audio_processing.sitemaps.PODCAST_SITEMAP_PAGE_SIZE", 1):
+            self.assertEqual(len(podcast_pages()), 1)
+            empty = Podcast.objects.create(
+                name="Empty Show", url="https://example.com/empty-show-feed"
+            )
+            self.assertEqual(len(podcast_pages()), 1)
+            Episode.objects.create(
+                podcast=empty,
+                title="First",
+                raw_audio_url="https://example.com/first.mp3",
+            )
+            self.assertEqual(len(podcast_pages()), 2)
 
 
 class CatalogSearchTest(CatalogEpisodesTestBase):

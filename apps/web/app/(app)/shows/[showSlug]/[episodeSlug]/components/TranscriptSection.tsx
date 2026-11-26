@@ -2,7 +2,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAlt } from '@/app/_lib/icons';
 import Pill from '@/app/_components/common/Pill';
 import ContentSection from './ContentSection';
-import RequestContentPanel from './RequestContentPanel';
 
 interface TranscriptEntry {
   timestamp?: string;
@@ -15,9 +14,6 @@ interface TranscriptEntry {
 interface TranscriptSectionProps {
   transcript?: TranscriptEntry[] | string;
   scriptTranscript?: string;
-  episodeSlug: string;
-  // False when the episode already has a summary, so there's nothing to request.
-  canRequest: boolean;
 }
 
 const styles = {
@@ -98,7 +94,7 @@ function parseScriptTranscript(script: string): TranscriptEntry[] {
   return entries;
 }
 
-export default function TranscriptSection({ transcript, scriptTranscript, episodeSlug, canRequest }: TranscriptSectionProps) {
+export default function TranscriptSection({ transcript, scriptTranscript }: TranscriptSectionProps) {
   let fullTranscript: TranscriptEntry[] = [];
 
   if (scriptTranscript) {
@@ -141,8 +137,6 @@ export default function TranscriptSection({ transcript, scriptTranscript, episod
             )
           )}
         </div>
-      ) : canRequest ? (
-        <RequestContentPanel episodeSlug={episodeSlug} kind="transcript" />
       ) : (
         <p className={styles.empty}>No transcript available for this episode yet.</p>
       )}
