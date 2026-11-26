@@ -7,7 +7,8 @@ import RequestContentPanel from './RequestContentPanel';
 
 interface SummarySectionProps {
   episode: Episode;
-  // False when the episode already has a transcript, so there's nothing to request.
+  // True only for an episode with neither summary nor transcript. The request
+  // panel lives here alone, so the Transcript section never shows a second one.
   canRequest: boolean;
 }
 

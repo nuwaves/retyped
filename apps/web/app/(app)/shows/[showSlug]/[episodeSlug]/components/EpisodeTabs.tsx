@@ -37,8 +37,6 @@ export default function EpisodeTabs({ episode }: EpisodeTabsProps) {
             <TranscriptSection
               transcript={episode.transcript}
               scriptTranscript={episode.script_transcript}
-              episodeSlug={episode.slug}
-              canRequest={canRequest}
             />
           ),
         },

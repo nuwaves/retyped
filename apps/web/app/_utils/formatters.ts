@@ -150,8 +150,8 @@ export function episodeHasContent(episode: {
 
 // Longest transcript put in the PodcastEpisode JSON-LD. The page already shows
 // the full transcript; this only bounds the extra copy in the markup (about
-// 17k words, so typical episodes are complete and only marathon ones are cut).
-export const JSON_LD_TRANSCRIPT_MAX_CHARS = 100_000;
+// 3.5k words; the full text stays in the visible HTML).
+export const JSON_LD_TRANSCRIPT_MAX_CHARS = 20_000;
 
 // Plain-text transcript for structured data: the same source the transcript
 // section shows (script_transcript first, then transcript), blank-line
@@ -176,10 +176,20 @@ export function transcriptToPlainText(
       .filter(Boolean)
       .join('\n\n');
   }
-  text = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  text = text
+    .replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
   if (!text) return undefined;
   if (text.length <= maxChars) return text;
-  const cut = text.slice(0, maxChars);
+  let cut = text.slice(0, maxChars);
   const lastSpace = cut.search(/\s\S*$/);
-  return (lastSpace > maxChars / 2 ? cut.slice(0, lastSpace) : cut).trimEnd();
+  if (lastSpace > maxChars / 2) {
+    cut = cut.slice(0, lastSpace);
+  } else if (/[\uD800-\uDBFF]/.test(cut.charAt(cut.length - 1))) {
+    // Hard cut landed inside a surrogate pair: drop the lone high surrogate.
+    cut = cut.slice(0, -1);
+  }
+  return cut.trimEnd();
 }
