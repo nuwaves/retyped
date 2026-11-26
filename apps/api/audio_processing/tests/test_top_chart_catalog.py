@@ -213,9 +213,7 @@ class SitemapTest(CatalogEpisodesTestBase):
             # Cached counts and the cached index would hide the change.
             cache.clear()
             return [
-                loc
-                for loc in self._locs("/sitemap.xml")
-                if "/sitemap-podcasts-" in loc
+                loc for loc in self._locs("/sitemap.xml") if "/sitemap-podcasts-" in loc
             ]
 
         # One show per page, so the page count equals the number of listed shows.
