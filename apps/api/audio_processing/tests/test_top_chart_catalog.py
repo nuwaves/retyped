@@ -188,6 +188,25 @@ class SitemapTest(CatalogEpisodesTestBase):
             any(loc.endswith(f"/shows/{self.podcast.slug}") for loc in locs)
         )
 
+    def test_podcast_sitemap_skips_shows_without_episodes(self):
+        empty = Podcast.objects.create(
+            name="Empty Show", url="https://example.com/empty-show-feed"
+        )
+        locs = self._locs("/sitemap-podcasts-1.xml")
+        self.assertFalse(any(loc.endswith(f"/shows/{empty.slug}") for loc in locs))
+        self.assertTrue(
+            any(loc.endswith(f"/shows/{self.podcast.slug}") for loc in locs)
+        )
+
+        # Listed as soon as it has an episode.
+        Episode.objects.create(
+            podcast=empty,
+            title="First",
+            raw_audio_url="https://example.com/first.mp3",
+        )
+        locs = self._locs("/sitemap-podcasts-1.xml")
+        self.assertTrue(any(loc.endswith(f"/shows/{empty.slug}") for loc in locs))
+
 
 class CatalogSearchTest(CatalogEpisodesTestBase):
     def test_new_feed_episodes_are_searchable_by_description(self):

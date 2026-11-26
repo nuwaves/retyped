@@ -146,3 +146,40 @@ export function episodeHasContent(episode: {
     typeof value === 'string' ? value.trim().length > 0 : Array.isArray(value) && value.length > 0;
   return hasText(episode.summary) || hasText(episode.transcript) || hasText(episode.script_transcript);
 }
+
+
+// Longest transcript put in the PodcastEpisode JSON-LD. The page already shows
+// the full transcript; this only bounds the extra copy in the markup (about
+// 17k words, so typical episodes are complete and only marathon ones are cut).
+export const JSON_LD_TRANSCRIPT_MAX_CHARS = 100_000;
+
+// Plain-text transcript for structured data: the same source the transcript
+// section shows (script_transcript first, then transcript), blank-line
+// separated turns, cut at a word boundary past the cap.
+export function transcriptToPlainText(
+  episode: {
+    transcript?: unknown;
+    script_transcript?: string | null;
+  },
+  maxChars = JSON_LD_TRANSCRIPT_MAX_CHARS
+): string | undefined {
+  let text = '';
+  if (typeof episode.script_transcript === 'string' && episode.script_transcript.trim()) {
+    text = episode.script_transcript;
+  } else if (typeof episode.transcript === 'string') {
+    text = episode.transcript;
+  } else if (Array.isArray(episode.transcript)) {
+    text = episode.transcript
+      .map((entry: { speaker?: string; text?: string }) =>
+        entry?.text ? (entry.speaker ? `${entry.speaker}: ${entry.text}` : entry.text) : ''
+      )
+      .filter(Boolean)
+      .join('\n\n');
+  }
+  text = text.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  if (!text) return undefined;
+  if (text.length <= maxChars) return text;
+  const cut = text.slice(0, maxChars);
+  const lastSpace = cut.search(/\s\S*$/);
+  return (lastSpace > maxChars / 2 ? cut.slice(0, lastSpace) : cut).trimEnd();
+}

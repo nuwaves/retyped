@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.sitemaps import Sitemap
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.cache import cache
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.utils import timezone
 
@@ -35,6 +36,16 @@ def sitemap_episodes():
     return Episode.objects.filter(Episode.has_content_q()).exclude(slug="")
 
 
+def sitemap_podcasts():
+    """
+    Shows to list in the sitemap: those with at least one episode. Empty shows
+    come back automatically once their first episode is ingested.
+    """
+    return Podcast.objects.exclude(slug="").filter(
+        Exists(Episode.objects.filter(podcast=OuterRef("pk")))
+    )
+
+
 def sitemap_index_view(request):
     """Return a sitemap index XML linking to all paginated sitemaps."""
     # Cache the sitemap index for 1 hour to avoid expensive queries on every request
@@ -56,7 +67,7 @@ def sitemap_index_view(request):
         "sitemap_episode_count", lambda: sitemap_episodes().count(), 3600
     )
     podcast_count = cache.get_or_set(
-        "podcast_count", lambda: Podcast.objects.count(), 3600
+        "sitemap_podcast_count", lambda: sitemap_podcasts().count(), 3600
     )
 
     episode_num_pages = min(
@@ -162,7 +173,7 @@ class PodcastSitemap(Sitemap):
         offset = (self.page - 1) * PODCAST_SITEMAP_PAGE_SIZE
         # Only load essential fields to reduce memory usage
         return (
-            Podcast.objects.exclude(slug="")
+            sitemap_podcasts()
             .only("id", "slug", "updated_at")
             .order_by("-updated_at", "-id")[offset : offset + PODCAST_SITEMAP_PAGE_SIZE]
         )
