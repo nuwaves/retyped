@@ -61,6 +61,18 @@ def _json(data, status=200, headers=None):
     return resp
 
 
+def _cache_try(op, *args, **kwargs):
+    """
+    Cache write after the replay lock is taken. A failure is logged, never
+    raised: the lock key stays as it is ("pending" is as safe as "settled"),
+    and the client must not get an error after settlement.
+    """
+    try:
+        op(*args, **kwargs)
+    except Exception:
+        logger.exception("paid API cache write failed after lock")
+
+
 def _payment_required(request, description, requirements, error, extra=None):
     body = x402.build_payment_required(
         request.build_absolute_uri(), description, requirements, error
@@ -81,9 +93,14 @@ def _setup(request):
     except PaidApiConfigError as exc:
         logger.error("paid API misconfigured: %s", exc)
         return None, _json({"error": "paid API unavailable"}, status=503)
-    allowed, retry = hit(
-        "ip", _client_ip(request, config), config.rate_limit_per_minute
-    )
+    try:
+        allowed, retry = hit(
+            "ip", _client_ip(request, config), config.rate_limit_per_minute
+        )
+    except Exception:
+        # Redis down: the limits and replay lock can't be trusted. Fail closed.
+        logger.exception("paid API cache unavailable (rate limit)")
+        return None, _json({"error": "paid API unavailable"}, status=503)
     if not allowed:
         return None, _json(
             {"error": "rate limit exceeded"},
@@ -137,7 +154,12 @@ def _charge(request, config, price, description, produce):
     # so re-encoding the header doesn't create a new key.
     payment_id = x402.payment_id(config.network, config.asset, signer, nonce)
     lock_key = "paid_api:payment:" + payment_id
-    if not cache.add(lock_key, "pending", timeout=None):
+    try:
+        locked = cache.add(lock_key, "pending", timeout=None)
+    except Exception:
+        logger.exception("paid API cache unavailable (replay lock)")
+        return _json({"error": "paid API unavailable"}, status=503)
+    if not locked:
         return _payment_required(
             request, description, requirements, "payment already submitted"
         )
@@ -146,19 +168,24 @@ def _charge(request, config, price, description, produce):
         verified = adapter.verify(payment, requirements)
     except Exception:
         # Nothing was settled yet, so free the payment and fail closed.
-        cache.delete(lock_key)
+        _cache_try(cache.delete, lock_key)
         logger.exception("paid API verify raised unexpectedly")
         return _json({"error": "paid API unavailable"}, status=503)
     if not verified.is_valid:
-        cache.delete(lock_key)
+        _cache_try(cache.delete, lock_key)
         return _payment_required(
             request, description, requirements, f"invalid payment: {verified.reason}"
         )
 
     payer = (verified.payer or signer).lower()
-    allowed, retry = hit("payer", payer, config.payer_rate_limit_per_minute)
+    try:
+        allowed, retry = hit("payer", payer, config.payer_rate_limit_per_minute)
+    except Exception:
+        logger.exception("paid API cache unavailable (payer rate limit)")
+        _cache_try(cache.delete, lock_key)
+        return _json({"error": "paid API unavailable"}, status=503)
     if not allowed:
-        cache.delete(lock_key)
+        _cache_try(cache.delete, lock_key)
         return _json(
             {"error": "rate limit exceeded"},
             status=429,
@@ -168,13 +195,13 @@ def _charge(request, config, price, description, produce):
     try:
         body, chargeable = produce()
     except Exception:
-        cache.delete(lock_key)
+        _cache_try(cache.delete, lock_key)
         raise
 
     if not chargeable:
         # Nothing to sell (e.g. a search with no results): don't settle, and
         # leave the payment unused so the client can spend it elsewhere.
-        cache.delete(lock_key)
+        _cache_try(cache.delete, lock_key)
         return _json(body)
 
     try:
@@ -208,11 +235,11 @@ def _charge(request, config, price, description, produce):
     response_header = {x402.HEADER_RESPONSE: x402.encode(settled.as_header())}
     if not settled.success:
         if settled.definite:
-            cache.delete(lock_key)
+            _cache_try(cache.delete, lock_key)
         else:
             # The transfer may have happened. Keep the payment locked forever
             # and log it for manual reconciliation on chain.
-            cache.set(lock_key, "unknown", timeout=None)
+            _cache_try(cache.set, lock_key, "unknown", timeout=None)
             logger.error(
                 "paid API settlement unknown: payment %s payer %s path %s reason %s",
                 payment_id,
@@ -228,7 +255,7 @@ def _charge(request, config, price, description, produce):
             extra=response_header,
         )
 
-    cache.set(lock_key, "settled", timeout=None)
+    _cache_try(cache.set, lock_key, "settled", timeout=None)
     logger.info(
         "paid API settled %s %s payment %s from %s tx %s",
         price.usd,

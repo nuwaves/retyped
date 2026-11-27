@@ -1,4 +1,7 @@
-# Retyped
+// Served by app/llms.txt/route.ts. This is the former public/llms.txt, verbatim.
+// Edit the text here. The paid-API section is appended only while the paid
+// API is live (see app/_lib/llmsTxt.ts), so it never shows while disabled.
+export const LLMS_TXT_BASE = `# Retyped
 
 > Retyped is a podcast discovery platform providing AI-generated summaries of podcast episodes.
 
@@ -21,3 +24,4 @@ Episode and show pages include PodcastEpisode and PodcastSeries schema.org marku
 - [Privacy Policy](https://retyped.xyz/privacy)
 - [Terms of Service](https://retyped.xyz/terms)
 - [Contact](https://retyped.xyz/contact)
+`;

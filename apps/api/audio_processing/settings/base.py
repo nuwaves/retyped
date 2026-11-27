@@ -152,6 +152,9 @@ if REDIS_URL:
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
             "LOCATION": REDIS_URL,
             "KEY_PREFIX": "audio_processing",
+            # A dead Redis must fail fast (the paid API then returns 503)
+            # instead of hanging web workers.
+            "OPTIONS": {"socket_connect_timeout": 2, "socket_timeout": 2},
         }
     }
 
@@ -183,6 +186,22 @@ PAID_API_PAY_TO = os.environ.get("PAID_API_PAY_TO", "")
 PAID_API_FACILITATOR_URL = os.environ.get(
     "PAID_API_FACILITATOR_URL", "https://x402.org/facilitator"
 )
+# Facilitator credentials, read from the environment only (never commit them).
+# Static extra request headers as a JSON object, e.g. {"X-Api-Key": "..."}.
+PAID_API_FACILITATOR_HEADERS = os.environ.get("PAID_API_FACILITATOR_HEADERS", "")
+# Shortcut for facilitators that take a static bearer token.
+PAID_API_FACILITATOR_BEARER_TOKEN = os.environ.get(
+    "PAID_API_FACILITATOR_BEARER_TOKEN", ""
+)
+# Key id / secret handed to PAID_API_FACILITATOR_AUTH_HOOK (e.g. Coinbase CDP).
+PAID_API_FACILITATOR_API_KEY_ID = os.environ.get("PAID_API_FACILITATOR_API_KEY_ID", "")
+PAID_API_FACILITATOR_API_KEY_SECRET = os.environ.get(
+    "PAID_API_FACILITATOR_API_KEY_SECRET", ""
+)
+# Dotted path to a callable (method, url, config) -> dict of headers, called for
+# every facilitator request. Needed for facilitators that sign each request
+# (Coinbase CDP uses a short-lived JWT). See docs/paid-api.md.
+PAID_API_FACILITATOR_AUTH_HOOK = os.environ.get("PAID_API_FACILITATOR_AUTH_HOOK", "")
 # Numbers stay raw strings here and are parsed in paid_api/config.py, so a bad
 # value disables the paid API (503) instead of crashing Django at startup.
 PAID_API_FACILITATOR_TIMEOUT = os.environ.get("PAID_API_FACILITATOR_TIMEOUT", "15")
